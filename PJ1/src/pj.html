@@ -1,0 +1,100 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <title>CG project1</title>
+    <script src="./config.js"></script>
+    <script src="./draw.js"></script>
+</head>
+
+<body>
+    <canvas id="myCanvas" width="800" height="600" style="border:1px solid #c3c3c3;">
+        Your browser does not support the canvas element.
+    </canvas>
+    <script type="text/javascript">
+
+        var c = document.getElementById("myCanvas");
+        c.width = canvasSize.maxX;
+        c.height = canvasSize.maxY;
+        var cxt = c.getContext("2d");
+
+        //将canvas坐标整体偏移0.5，用于解决宽度为1个像素的线段的绘制问题，具体原理详见project文档
+        cxt.translate(0.5, 0.5);
+
+        for (var i in polygon) {
+            renderRect(cxt, polygon[i], vertex_color[polygon[i][0]]);
+        }
+        drawVertex(cxt);
+
+        rect = c.getBoundingClientRect();
+        var isDown = 0;
+        var isSelect = 0;
+        var pointNum;
+        var relevantRect = [];
+        var x, y;
+        // 鼠标放下：检测是否在其中一个顶点周围，同时设置relevantRect数组
+        //relevantRect数组记录了选定一个顶点后与这个顶点相关联的四边形，用于重新排列渲染顺序
+        window.onmousedown = function (event) {
+            isDown = 1;
+            x = event.clientX - rect.left;
+            y = event.clientY - rect.top;
+            isSelect = 0;
+            for (var i in vertex_pos) {
+                if (getDis(vertex_pos[i][0], vertex_pos[i][1], x, y) < radius) {
+                    isSelect = 1;
+                    pointNum = i;
+                    break;
+                }
+            }
+            if (isSelect) {
+                relevantRect = [];
+                for (var j in polygon) {
+                    for (var k in polygon[j]) {
+                        if (polygon[j][k] == pointNum) {
+                            relevantRect.push(j);
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        //鼠标松开：还原
+        window.onmouseup = function (event) {
+            isDown = 0;
+            isSelect = 0;
+        }
+        //判断是否在relevantRect数组中
+        function isRelevant(num) {
+            for (var i in relevantRect) {
+                if (relevantRect[i] == num) {
+                    return 1;
+                }
+            }
+            return 0;
+        }
+        //鼠标移动：如果处于放下且选定顶点状态则让顶点移动，并重新渲染
+        window.onmousemove = function (event) {
+            x = event.clientX - rect.left;
+            y = event.clientY - rect.top;
+            if (isDown && isSelect) {
+                if (x >= 0 && x <= canvasSize.maxX && y >= 0 && y <= canvasSize.maxY) {
+                    //清空画布并重新渲染
+                    cxt.clearRect(0, 0, canvasSize.maxX, canvasSize.maxY);
+                    vertex_pos[pointNum][0] = x;
+                    vertex_pos[pointNum][1] = y;
+                    for (var i in polygon) {
+                        if (!isRelevant(i)) {
+                            renderRect(cxt, polygon[i], vertex_color[polygon[i][0]]);
+                        }
+                    }
+                    for (var i in relevantRect) {
+                        renderRect(cxt, polygon[relevantRect[i]], vertex_color[polygon[relevantRect[i]][0]])
+                    }
+                    drawVertex(cxt);
+                }
+            }
+        }
+    </script>
+</body>
+
+</html>

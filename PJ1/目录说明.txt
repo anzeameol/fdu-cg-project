@@ -1,0 +1,5 @@
+sample目录下的html文件展示了最终的演示效果
+
+src目录下有本次pj1所需的配置文件config.js和项目文件pj.html，以及绘图函数文件draw.js
+
+test目录下的html文件用于测试你的浏览器是否支持webgl和html5<canvas>
